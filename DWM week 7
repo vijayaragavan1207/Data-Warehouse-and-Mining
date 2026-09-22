@@ -1,0 +1,813 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "id": "2ycPsVV9D1z_"
+      },
+      "outputs": [],
+      "source": [
+        "from collections import defaultdict\n",
+        "from itertools import combinations\n",
+        "import math"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "transactions = [\n",
+        "    [\"Milk\", \"Bread\", \"Butter\"],\n",
+        "    [\"Bread\", \"Butter\"],\n",
+        "    [\"Milk\", \"Bread\"],\n",
+        "    [\"Milk\", \"Butter\"],\n",
+        "    [\"Bread\", \"Butter\", \"Eggs\"],\n",
+        "    [\"Milk\", \"Bread\", \"Butter\"],\n",
+        "    [\"Bread\", \"Eggs\"],\n",
+        "    [\"Milk\", \"Bread\", \"Eggs\"],\n",
+        "    [\"Milk\", \"Butter\"],\n",
+        "    [\"Bread\", \"Butter\", \"Eggs\"]\n",
+        "]\n",
+        "\n",
+        "print(\"Number of Transactions:\", len(transactions))\n",
+        "\n",
+        "for i, transaction in enumerate(transactions, start=1):\n",
+        "    print(i, transaction)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "5_YQ_8qND6EJ",
+        "outputId": "e2653747-72e2-4fa2-b80b-553abf837795"
+      },
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Number of Transactions: 10\n",
+            "1 ['Milk', 'Bread', 'Butter']\n",
+            "2 ['Bread', 'Butter']\n",
+            "3 ['Milk', 'Bread']\n",
+            "4 ['Milk', 'Butter']\n",
+            "5 ['Bread', 'Butter', 'Eggs']\n",
+            "6 ['Milk', 'Bread', 'Butter']\n",
+            "7 ['Bread', 'Eggs']\n",
+            "8 ['Milk', 'Bread', 'Eggs']\n",
+            "9 ['Milk', 'Butter']\n",
+            "10 ['Bread', 'Butter', 'Eggs']\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "min_support = 0.3\n",
+        "\n",
+        "min_support_count = math.ceil(\n",
+        "    len(transactions) * min_support\n",
+        ")\n",
+        "\n",
+        "print(\"Minimum Support:\", min_support)\n",
+        "print(\"Minimum Support Count:\", min_support_count)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "cfgHOourD8_2",
+        "outputId": "214340ab-df0f-4ffc-8f61-3ed5fe248f0e"
+      },
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Minimum Support: 0.3\n",
+            "Minimum Support Count: 3\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def partition_transactions(transactions, number_of_partitions):\n",
+        "    partitions = [[] for _ in range(number_of_partitions)]\n",
+        "\n",
+        "    for index, transaction in enumerate(transactions):\n",
+        "        partition_index = index % number_of_partitions\n",
+        "        partitions[partition_index].append(set(transaction))\n",
+        "\n",
+        "    return partitions"
+      ],
+      "metadata": {
+        "id": "uBYv6agWECb_"
+      },
+      "execution_count": 4,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "number_of_partitions = 2\n",
+        "\n",
+        "partitions = partition_transactions(\n",
+        "    transactions,\n",
+        "    number_of_partitions\n",
+        ")\n",
+        "\n",
+        "for i, partition in enumerate(partitions, start=1):\n",
+        "    print(f\"Partition {i}:\")\n",
+        "    for transaction in partition:\n",
+        "        print(transaction)\n",
+        "    print()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "tTAVtiTiEFhv",
+        "outputId": "46888d5e-48cc-44a8-9866-c01ecb51688f"
+      },
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Partition 1:\n",
+            "{'Bread', 'Milk', 'Butter'}\n",
+            "{'Bread', 'Milk'}\n",
+            "{'Bread', 'Eggs', 'Butter'}\n",
+            "{'Bread', 'Eggs'}\n",
+            "{'Milk', 'Butter'}\n",
+            "\n",
+            "Partition 2:\n",
+            "{'Bread', 'Butter'}\n",
+            "{'Milk', 'Butter'}\n",
+            "{'Bread', 'Milk', 'Butter'}\n",
+            "{'Bread', 'Eggs', 'Milk'}\n",
+            "{'Bread', 'Eggs', 'Butter'}\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def count_single_items(partition):\n",
+        "    counts = defaultdict(int)\n",
+        "\n",
+        "    for transaction in partition:\n",
+        "        for item in transaction:\n",
+        "            counts[frozenset([item])] += 1\n",
+        "\n",
+        "    return counts"
+      ],
+      "metadata": {
+        "id": "iQmxTMmeEJJr"
+      },
+      "execution_count": 6,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def combine_counts(partition_counts):\n",
+        "    total_counts = defaultdict(int)\n",
+        "\n",
+        "    for counts in partition_counts:\n",
+        "        for itemset, count in counts.items():\n",
+        "            total_counts[itemset] += count\n",
+        "\n",
+        "    return total_counts"
+      ],
+      "metadata": {
+        "id": "z3c_ILQ3EMsP"
+      },
+      "execution_count": 7,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def get_frequent_itemsets(item_counts, min_support_count):\n",
+        "    frequent = {}\n",
+        "\n",
+        "    for itemset, count in item_counts.items():\n",
+        "        if count >= min_support_count:\n",
+        "            frequent[itemset] = count\n",
+        "\n",
+        "    return frequent"
+      ],
+      "metadata": {
+        "id": "DMVV29XcEPet"
+      },
+      "execution_count": 8,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "partition_counts = []\n",
+        "\n",
+        "for partition in partitions:\n",
+        "    counts = count_single_items(partition)\n",
+        "    partition_counts.append(counts)\n",
+        "\n",
+        "item_counts = combine_counts(partition_counts)\n",
+        "\n",
+        "frequent_1 = get_frequent_itemsets(\n",
+        "    item_counts,\n",
+        "    min_support_count\n",
+        ")\n",
+        "\n",
+        "print(\"Frequent 1-Itemsets:\")\n",
+        "\n",
+        "for itemset, count in frequent_1.items():\n",
+        "    print(set(itemset), \"->\", count)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "hLSl-hHLESkv",
+        "outputId": "0246a730-14f5-4547-eccf-b1b45236d711"
+      },
+      "execution_count": 9,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Frequent 1-Itemsets:\n",
+            "{'Bread'} -> 8\n",
+            "{'Milk'} -> 6\n",
+            "{'Butter'} -> 7\n",
+            "{'Eggs'} -> 4\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def generate_candidates(previous_frequent, k):\n",
+        "    candidates = set()\n",
+        "\n",
+        "    previous_itemsets = list(previous_frequent.keys())\n",
+        "\n",
+        "    for i in range(len(previous_itemsets)):\n",
+        "        for j in range(i + 1, len(previous_itemsets)):\n",
+        "\n",
+        "            union_set = previous_itemsets[i] | previous_itemsets[j]\n",
+        "\n",
+        "            if len(union_set) == k:\n",
+        "                candidates.add(frozenset(union_set))\n",
+        "\n",
+        "    return candidates"
+      ],
+      "metadata": {
+        "id": "G-2YVNw8EV2r"
+      },
+      "execution_count": 10,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "class HashTreeNode:\n",
+        "    def __init__(self):\n",
+        "        self.children = {}\n",
+        "        self.candidates = []"
+      ],
+      "metadata": {
+        "id": "oG85DNaQEZOQ"
+      },
+      "execution_count": 11,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "class HashTree:\n",
+        "    def __init__(self):\n",
+        "        self.root = HashTreeNode()\n",
+        "\n",
+        "    def insert(self, itemset):\n",
+        "        current = self.root\n",
+        "\n",
+        "        for item in sorted(itemset):\n",
+        "            if item not in current.children:\n",
+        "                current.children[item] = HashTreeNode()\n",
+        "\n",
+        "            current = current.children[item]\n",
+        "\n",
+        "        current.candidates.append(frozenset(itemset))"
+      ],
+      "metadata": {
+        "id": "7m_M08PjEcHE"
+      },
+      "execution_count": 12,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def verify_candidate(tree, itemset):\n",
+        "    current = tree.root\n",
+        "\n",
+        "    for item in sorted(itemset):\n",
+        "        if item not in current.children:\n",
+        "            return False\n",
+        "\n",
+        "        current = current.children[item]\n",
+        "\n",
+        "    return frozenset(itemset) in current.candidates"
+      ],
+      "metadata": {
+        "id": "Vy5z7XETEfES"
+      },
+      "execution_count": 13,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def build_hash_tree(candidates):\n",
+        "    tree = HashTree()\n",
+        "\n",
+        "    for candidate in candidates:\n",
+        "        tree.insert(candidate)\n",
+        "\n",
+        "    return tree"
+      ],
+      "metadata": {
+        "id": "CGJBt1iREhzU"
+      },
+      "execution_count": 14,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def count_candidates_in_partition(\n",
+        "    partition,\n",
+        "    candidates,\n",
+        "    hash_tree\n",
+        "):\n",
+        "    counts = defaultdict(int)\n",
+        "\n",
+        "    for transaction in partition:\n",
+        "\n",
+        "        for candidate in candidates:\n",
+        "\n",
+        "            if not verify_candidate(hash_tree, candidate):\n",
+        "                continue\n",
+        "\n",
+        "            if candidate.issubset(transaction):\n",
+        "                counts[candidate] += 1\n",
+        "\n",
+        "    return counts"
+      ],
+      "metadata": {
+        "id": "X4Bz5H9aEuJX"
+      },
+      "execution_count": 15,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def apriori(\n",
+        "    transactions,\n",
+        "    min_support,\n",
+        "    number_of_partitions\n",
+        "):\n",
+        "\n",
+        "    min_support_count = math.ceil(\n",
+        "        len(transactions) * min_support\n",
+        "    )\n",
+        "\n",
+        "    partitions = partition_transactions(\n",
+        "        transactions,\n",
+        "        number_of_partitions\n",
+        "    )\n",
+        "\n",
+        "    # -------------------------\n",
+        "    # 1-Itemsets\n",
+        "    # -------------------------\n",
+        "\n",
+        "    partition_counts = []\n",
+        "\n",
+        "    for partition in partitions:\n",
+        "        counts = count_single_items(partition)\n",
+        "        partition_counts.append(counts)\n",
+        "\n",
+        "    total_counts = combine_counts(partition_counts)\n",
+        "\n",
+        "    frequent = get_frequent_itemsets(\n",
+        "        total_counts,\n",
+        "        min_support_count\n",
+        "    )\n",
+        "\n",
+        "    all_frequent = dict(frequent)\n",
+        "\n",
+        "    k = 2\n",
+        "\n",
+        "    # -------------------------\n",
+        "    # Larger Itemsets\n",
+        "    # -------------------------\n",
+        "\n",
+        "    while frequent:\n",
+        "\n",
+        "        candidates = generate_candidates(\n",
+        "            frequent,\n",
+        "            k\n",
+        "        )\n",
+        "\n",
+        "        if not candidates:\n",
+        "            break\n",
+        "\n",
+        "        # Build Hash Tree\n",
+        "        hash_tree = build_hash_tree(candidates)\n",
+        "\n",
+        "        # Count candidates in partitions\n",
+        "        partition_candidate_counts = []\n",
+        "\n",
+        "        for partition in partitions:\n",
+        "\n",
+        "            counts = count_candidates_in_partition(\n",
+        "                partition,\n",
+        "                candidates,\n",
+        "                hash_tree\n",
+        "            )\n",
+        "\n",
+        "            partition_candidate_counts.append(counts)\n",
+        "\n",
+        "        total_candidate_counts = combine_counts(\n",
+        "            partition_candidate_counts\n",
+        "        )\n",
+        "\n",
+        "        frequent = get_frequent_itemsets(\n",
+        "            total_candidate_counts,\n",
+        "            min_support_count\n",
+        "        )\n",
+        "\n",
+        "        for itemset, count in frequent.items():\n",
+        "            all_frequent[itemset] = count\n",
+        "\n",
+        "        k += 1\n",
+        "\n",
+        "    return all_frequent"
+      ],
+      "metadata": {
+        "id": "6Y2xa0Z5EzLo"
+      },
+      "execution_count": 16,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "frequent_itemsets = apriori(\n",
+        "    transactions,\n",
+        "    min_support,\n",
+        "    number_of_partitions\n",
+        ")\n",
+        "\n",
+        "print(\"Frequent Itemsets\")\n",
+        "print(\"-----------------\")\n",
+        "\n",
+        "for itemset, count in sorted(\n",
+        "    frequent_itemsets.items(),\n",
+        "    key=lambda x: (len(x[0]), sorted(x[0]))\n",
+        "):\n",
+        "    print(set(itemset), \"->\", count)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "MK8huWWNE1f5",
+        "outputId": "ce2fb88b-37ff-4abe-d465-d5347c64fbab"
+      },
+      "execution_count": 17,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Frequent Itemsets\n",
+            "-----------------\n",
+            "{'Bread'} -> 8\n",
+            "{'Butter'} -> 7\n",
+            "{'Eggs'} -> 4\n",
+            "{'Milk'} -> 6\n",
+            "{'Bread', 'Butter'} -> 5\n",
+            "{'Bread', 'Eggs'} -> 4\n",
+            "{'Bread', 'Milk'} -> 4\n",
+            "{'Milk', 'Butter'} -> 4\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def calculate_support(itemset, transactions):\n",
+        "    count = 0\n",
+        "\n",
+        "    itemset = set(itemset)\n",
+        "\n",
+        "    for transaction in transactions:\n",
+        "        if itemset.issubset(set(transaction)):\n",
+        "            count += 1\n",
+        "\n",
+        "    return count / len(transactions)"
+      ],
+      "metadata": {
+        "id": "Bt4Z9ASEE4Do"
+      },
+      "execution_count": 18,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def generate_rules(\n",
+        "    frequent_itemsets,\n",
+        "    transactions,\n",
+        "    min_confidence=0.5\n",
+        "):\n",
+        "\n",
+        "    rules = []\n",
+        "\n",
+        "    for itemset in frequent_itemsets:\n",
+        "\n",
+        "        if len(itemset) < 2:\n",
+        "            continue\n",
+        "\n",
+        "        itemset = set(itemset)\n",
+        "\n",
+        "        for size in range(1, len(itemset)):\n",
+        "\n",
+        "            for antecedent_tuple in combinations(\n",
+        "                itemset,\n",
+        "                size\n",
+        "            ):\n",
+        "\n",
+        "                antecedent = set(antecedent_tuple)\n",
+        "                consequent = itemset - antecedent\n",
+        "\n",
+        "                support_itemset = calculate_support(\n",
+        "                    itemset,\n",
+        "                    transactions\n",
+        "                )\n",
+        "\n",
+        "                support_antecedent = calculate_support(\n",
+        "                    antecedent,\n",
+        "                    transactions\n",
+        "                )\n",
+        "\n",
+        "                if support_antecedent == 0:\n",
+        "                    continue\n",
+        "\n",
+        "                confidence = (\n",
+        "                    support_itemset /\n",
+        "                    support_antecedent\n",
+        "                )\n",
+        "\n",
+        "                if confidence >= min_confidence:\n",
+        "\n",
+        "                    rules.append({\n",
+        "                        \"antecedent\": antecedent,\n",
+        "                        \"consequent\": consequent,\n",
+        "                        \"support\": support_itemset,\n",
+        "                        \"confidence\": confidence\n",
+        "                    })\n",
+        "\n",
+        "    return rules"
+      ],
+      "metadata": {
+        "id": "taVhjDFxE88I"
+      },
+      "execution_count": 19,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def calculate_lift(\n",
+        "    support_itemset,\n",
+        "    support_antecedent,\n",
+        "    support_consequent\n",
+        "):\n",
+        "\n",
+        "    if support_antecedent == 0 or support_consequent == 0:\n",
+        "        return 0\n",
+        "\n",
+        "    return (\n",
+        "        support_itemset /\n",
+        "        (support_antecedent * support_consequent)\n",
+        "    )"
+      ],
+      "metadata": {
+        "id": "IEiSGNy5E-0f"
+      },
+      "execution_count": 20,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def calculate_conviction(\n",
+        "    confidence,\n",
+        "    support_consequent\n",
+        "):\n",
+        "\n",
+        "    if confidence >= 1:\n",
+        "        return float(\"inf\")\n",
+        "\n",
+        "    if support_consequent == 1:\n",
+        "        return float(\"inf\")\n",
+        "\n",
+        "    return (\n",
+        "        (1 - support_consequent) /\n",
+        "        (1 - confidence)\n",
+        "    )"
+      ],
+      "metadata": {
+        "id": "2s4FLD8WFI-Y"
+      },
+      "execution_count": 21,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "rules = generate_rules(\n",
+        "    frequent_itemsets,\n",
+        "    transactions,\n",
+        "    min_confidence=0.5\n",
+        ")\n",
+        "\n",
+        "for rule in rules:\n",
+        "\n",
+        "    antecedent = rule[\"antecedent\"]\n",
+        "    consequent = rule[\"consequent\"]\n",
+        "\n",
+        "    support_itemset = rule[\"support\"]\n",
+        "    confidence = rule[\"confidence\"]\n",
+        "\n",
+        "    support_antecedent = calculate_support(\n",
+        "        antecedent,\n",
+        "        transactions\n",
+        "    )\n",
+        "\n",
+        "    support_consequent = calculate_support(\n",
+        "        consequent,\n",
+        "        transactions\n",
+        "    )\n",
+        "\n",
+        "    lift = calculate_lift(\n",
+        "        support_itemset,\n",
+        "        support_antecedent,\n",
+        "        support_consequent\n",
+        "    )\n",
+        "\n",
+        "    conviction = calculate_conviction(\n",
+        "        confidence,\n",
+        "        support_consequent\n",
+        "    )\n",
+        "\n",
+        "    rule[\"lift\"] = lift\n",
+        "    rule[\"conviction\"] = conviction"
+      ],
+      "metadata": {
+        "id": "0zxJYKAKE631"
+      },
+      "execution_count": 22,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "print(\"Association Rules\")\n",
+        "print(\"==================\")\n",
+        "\n",
+        "for rule in rules:\n",
+        "\n",
+        "    print(\n",
+        "        f\"{rule['antecedent']} \"\n",
+        "        f\"-> \"\n",
+        "        f\"{rule['consequent']}\"\n",
+        "    )\n",
+        "\n",
+        "    print(\n",
+        "        f\"Support    : {rule['support']:.3f}\"\n",
+        "    )\n",
+        "\n",
+        "    print(\n",
+        "        f\"Confidence : {rule['confidence']:.3f}\"\n",
+        "    )\n",
+        "\n",
+        "    print(\n",
+        "        f\"Lift       : {rule['lift']:.3f}\"\n",
+        "    )\n",
+        "\n",
+        "    print(\n",
+        "        f\"Conviction : {rule['conviction']:.3f}\"\n",
+        "    )\n",
+        "\n",
+        "    print(\"------------------\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "m_ihe0iwFSLA",
+        "outputId": "77ac8d7c-b4d6-4fbd-99b6-04b5ad31d3e7"
+      },
+      "execution_count": 23,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Association Rules\n",
+            "==================\n",
+            "{'Bread'} -> {'Butter'}\n",
+            "Support    : 0.500\n",
+            "Confidence : 0.625\n",
+            "Lift       : 0.893\n",
+            "Conviction : 0.800\n",
+            "------------------\n",
+            "{'Butter'} -> {'Bread'}\n",
+            "Support    : 0.500\n",
+            "Confidence : 0.714\n",
+            "Lift       : 0.893\n",
+            "Conviction : 0.700\n",
+            "------------------\n",
+            "{'Bread'} -> {'Milk'}\n",
+            "Support    : 0.400\n",
+            "Confidence : 0.500\n",
+            "Lift       : 0.833\n",
+            "Conviction : 0.800\n",
+            "------------------\n",
+            "{'Milk'} -> {'Bread'}\n",
+            "Support    : 0.400\n",
+            "Confidence : 0.667\n",
+            "Lift       : 0.833\n",
+            "Conviction : 0.600\n",
+            "------------------\n",
+            "{'Milk'} -> {'Butter'}\n",
+            "Support    : 0.400\n",
+            "Confidence : 0.667\n",
+            "Lift       : 0.952\n",
+            "Conviction : 0.900\n",
+            "------------------\n",
+            "{'Butter'} -> {'Milk'}\n",
+            "Support    : 0.400\n",
+            "Confidence : 0.571\n",
+            "Lift       : 0.952\n",
+            "Conviction : 0.933\n",
+            "------------------\n",
+            "{'Bread'} -> {'Eggs'}\n",
+            "Support    : 0.400\n",
+            "Confidence : 0.500\n",
+            "Lift       : 1.250\n",
+            "Conviction : 1.200\n",
+            "------------------\n",
+            "{'Eggs'} -> {'Bread'}\n",
+            "Support    : 0.400\n",
+            "Confidence : 1.000\n",
+            "Lift       : 1.250\n",
+            "Conviction : inf\n",
+            "------------------\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
